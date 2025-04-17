@@ -1,4 +1,4 @@
-<h1><img align=right src="../../../pruten.github.io/raw/master/web/stork_tiny_head3.jpg"/>Shoebill</h1>
+<h1><img align=right src="https://pruten.github.io/raw/master/web/stork_tiny_head3.jpg"/>Shoebill</h1>
 
 A Macintosh II emulator that runs A/UX (and A/UX only). 
 
@@ -13,6 +13,7 @@ This is patched version with networking and FreeBSD support:
 ![Linux with networking](https://github.com/alex0x08/shoebill/blob/master/images/linux.png?raw=true)
 ![FreeBSD with networking](https://github.com/alex0x08/shoebill/blob/master/images/freebsd.png?raw=true)
 
+Article with details [here](https://blog.0x08.ru/apple-aux-snoebill-emul) (in russian)
 
 [Download the latest release], and then see the [getting started] wiki.  
 Also check out [screenshots].
