@@ -34,18 +34,15 @@
 #include "../core/shoebill.h"
 
 #if (defined __linux__)
-
+#include <sys/ioctl.h>
 #include <linux/if.h>
 #include <linux/if_tun.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #endif
 
 #if (defined __linux__) || (defined __FreeBSD__)
-
 #include <fcntl.h>
-
 #endif
 
 
@@ -439,6 +436,59 @@ void* _pram_writer_thread (void *param)
     return NULL;
 }
 
+static void setup_network (shoebill_config_t *config)
+{
+
+int fd;
+
+#if (defined __linux__)
+
+struct ifreq ifr;
+
+// Open the TUN device
+if ((fd = open("/dev/net/tun", O_RDWR)) < 0) {
+        perror("Failed to open TUN device, skipping network setup.");
+   	return;
+}
+
+#else
+
+// Open the TAP device
+if ((fd = open("/dev/tap0", O_RDWR)) < 0) {
+        perror("Failed to open TAP device, skipping network setup.");
+   	return;
+}
+
+
+#endif
+
+
+#if (defined __linux__)
+
+char tun_name[IFNAMSIZ];
+strcpy(tun_name, "tap0");
+
+// Configure the TUN device
+memset(&ifr, 0, sizeof(ifr));
+ifr.ifr_flags = IFF_TAP | IFF_NO_PI |  IFF_UP;   
+strncpy(ifr.ifr_name, tun_name, IFNAMSIZ);
+
+if (ioctl(fd, TUNSETIFF, (void *)&ifr) < 0) {
+        perror("Failed to configure TUN device, skipping network setup.");
+        close(fd);
+	return;
+}
+
+printf("TAP device name: %s\n", ifr.ifr_name);
+#endif
+
+
+uint8_t ethernet_addr[6] = {0x22, 0x33, 0x55, 0x77, 0xbb, 0xdd};
+    
+shoebill_install_ethernet_card(config, 13, ethernet_addr,fd);     
+
+} 
+
 
 static _Bool _setup_shoebill (void)
 {
@@ -472,41 +522,8 @@ static _Bool _setup_shoebill (void)
                                     user_params.width,
                                     user_params.height);
     }
-int tun_fd;
 
-#if (defined __linux__)
-struct ifreq ifr;
-#endif
-
-// Open the TUN device
-if ((tun_fd = open("/dev/tap0", O_RDWR)) < 0) {
-        perror("Failed to open TUN device");
-        exit(1);
-}
-
-#if (defined __linux__)
-
-char tun_name[IFNAMSIZ];
-strcpy(tun_name, "tap0");
-
-// Configure the TUN device
-memset(&ifr, 0, sizeof(ifr));
-ifr.ifr_flags = IFF_TAP | IFF_NO_PI |  IFF_UP;   
-strncpy(ifr.ifr_name, tun_name, IFNAMSIZ);
-// вызов SYSCALL для настройки устройства
-if (ioctl(tun_fd, TUNSETIFF, (void *)&ifr) < 0) {
-        perror("Failed to configure TUN device");
-        close(tun_fd);
-        exit(1);
-}
-
-printf("TAP device name: %s\n", ifr.ifr_name);
-#endif
-
-
-uint8_t ethernet_addr[6] = {0x22, 0x33, 0x55, 0x77, 0xbb, 0xdd};
-    
-shoebill_install_ethernet_card(&config, 13, ethernet_addr,tun_fd);     
+    setup_network(&config);
 
     shoebill_start();
     return 1;
