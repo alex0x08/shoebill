@@ -542,8 +542,9 @@ static _Bool _init_pram (void)
             f = fopen(user_params.pram_path, "w+b");
         if (f == NULL) {
             printf("Can't open pram_path! [%s] [errno=%s]\n",
-                   user_params.pram_path,
-                   sys_errlist[errno]);
+                   user_params.pram_path,errno);
+// sys_errlist is deprecated and removed from glibc
+//                   sys_errlist[errno]);
             return 0;
         }
         rewind(f);
