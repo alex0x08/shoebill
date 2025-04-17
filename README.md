@@ -6,6 +6,14 @@ Shoebill is an all-new, BSD-licensed Macintosh II emulator designed from the gro
 
 Shoebill requires a Macintosh II, IIx or IIcx ROM, and a disk image with A/UX installed.
 
+### Patched version
+
+This is patched version with networking and FreeBSD support:
+
+![Linux with networking](https://github.com/alex0x08/shoebill/blob/master/images/linux.png?raw=true)
+![FreeBSD with networking](https://github.com/alex0x08/shoebill/blob/master/images/freebsd.png?raw=true)
+
+
 [Download the latest release], and then see the [getting started] wiki.  
 Also check out [screenshots].
 
