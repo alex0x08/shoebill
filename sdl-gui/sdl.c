@@ -33,9 +33,25 @@
 #include <SDL2/SDL_opengl.h>
 #include "../core/shoebill.h"
 
+#if (defined __linux__)
+
+#include <linux/if.h>
+#include <linux/if_tun.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#endif
+
+#if (defined __linux__) || (defined __FreeBSD__)
+
+#include <fcntl.h>
+
+#endif
+
+
 static void _print_vers(void)
 {
-    printf("Shoebill v0.0.4 - http://github.com/pruten/shoebill - Peter Rutenbar (c) 2014\n\n");
+    printf("Shoebill v0.0.5 (patched) - http://github.com/pruten/shoebill - Peter Rutenbar (c) 2014\n\n");
 }
 
 rb_tree *keymap;
@@ -456,7 +472,41 @@ static _Bool _setup_shoebill (void)
                                     user_params.width,
                                     user_params.height);
     }
+int tun_fd;
+
+#if (defined __linux__)
+struct ifreq ifr;
+#endif
+
+// Open the TUN device
+if ((tun_fd = open("/dev/tap0", O_RDWR)) < 0) {
+        perror("Failed to open TUN device");
+        exit(1);
+}
+
+#if (defined __linux__)
+
+char tun_name[IFNAMSIZ];
+strcpy(tun_name, "tap0");
+
+// Configure the TUN device
+memset(&ifr, 0, sizeof(ifr));
+ifr.ifr_flags = IFF_TAP | IFF_NO_PI |  IFF_UP;   
+strncpy(ifr.ifr_name, tun_name, IFNAMSIZ);
+// вызов SYSCALL для настройки устройства
+if (ioctl(tun_fd, TUNSETIFF, (void *)&ifr) < 0) {
+        perror("Failed to configure TUN device");
+        close(tun_fd);
+        exit(1);
+}
+
+printf("TAP device name: %s\n", ifr.ifr_name);
+#endif
+
+
+uint8_t ethernet_addr[6] = {0x22, 0x33, 0x55, 0x77, 0xbb, 0xdd};
     
+shoebill_install_ethernet_card(&config, 13, ethernet_addr,tun_fd);     
 
     shoebill_start();
     return 1;
